@@ -1,30 +1,57 @@
 import os
 import sys
+
 from dotenv import load_dotenv
 from google import genai
-def ai_agent(content):
+from google.genai import types
+def ai_agent(user_prompt , verbose):
     load_dotenv()
     api_key = os.environ.get("GEMINI_API_KEY")
     client = genai.Client(api_key=api_key)
-
+    messages = [
+        types.Content(role="user", parts=[types.Part(text=user_prompt)])
+    ]
     response = client.models.generate_content(
         model = "gemini-2.0-flash-001", 
-        contents = content
+        contents = messages
     )
 
+    if verbose:
+
+        print(f"User prompt: {user_prompt}")
+        print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+        print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+
     print(f"Response: {response.text}")
-    print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-    print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+
+    
+    
 
 
 def main():
-    if len(sys.argv)<2:
-        print("no prompt added to parse.")
-        sys.exit(1)
     
-    content = sys.argv[1]
-    ai_agent(content)
+    
+    user_prompt = []
 
+    verbose = "--verbose" in sys.argv
+    for arg in sys.argv[1:]:
+        if arg.startswith("--"):
+            continue
+        user_prompt.append(arg)
+
+    if not user_prompt:
+        print("No prompt parsed ")
+        print("\nUsage: python main.py 'prompt here' [--verbose]")
+        print("\nExample: python main.py 'why we still here ?' ")
+        sys.exit(1)
+    user_text = " ".join(user_prompt)
+    
+    
+    ai_agent(user_text,verbose)
+
+    
+    
 
 if __name__ == "__main__":
     main()
+
