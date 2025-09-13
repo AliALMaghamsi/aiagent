@@ -1,9 +1,11 @@
 import os
 import sys
-
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from functions.available_functions import available_functions
+from ai_prompt import system_prompt
+
 def ai_agent(user_prompt , verbose):
     load_dotenv()
     api_key = os.environ.get("GEMINI_API_KEY")
@@ -11,9 +13,12 @@ def ai_agent(user_prompt , verbose):
     messages = [
         types.Content(role="user", parts=[types.Part(text=user_prompt)])
     ]
+    
+
     response = client.models.generate_content(
         model = "gemini-2.0-flash-001", 
-        contents = messages
+        contents = messages,
+        config= types.GenerateContentConfig(tools=[available_functions],system_instruction = system_prompt),
     )
 
     if verbose:
@@ -21,8 +26,12 @@ def ai_agent(user_prompt , verbose):
         print(f"User prompt: {user_prompt}")
         print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
         print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
-
-    print(f"Response: {response.text}")
+    if response.function_calls:
+       for function_call_part in response.function_calls:
+        print(f"Calling function: {function_call_part.name}({function_call_part.args})")
+      
+    else:
+        print(f"Response: {response.text}")
 
     
     
