@@ -13,6 +13,7 @@ def get_file_content(working_directory, file_path):
         
         if not os.path.isfile(abs_path):
             return f'Error: File not found or is not a regular file: "{file_path}"'
+        
         try:
              
             with open(abs_path,"r") as f:
